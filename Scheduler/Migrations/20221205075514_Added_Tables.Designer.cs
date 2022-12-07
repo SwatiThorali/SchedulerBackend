@@ -12,14 +12,14 @@ using Scheduler.Data;
 namespace Scheduler.Migrations
 {
     [DbContext(typeof(SchedulerContext))]
-    [Migration("20221129111705_Added_Tables")]
+    [Migration("20221205075514_Added_Tables")]
     partial class Added_Tables
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "6.0.10")
+                .HasAnnotation("ProductVersion", "6.0.11")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
@@ -44,7 +44,10 @@ namespace Scheduler.Migrations
             modelBuilder.Entity("Scheduler.Models.Schedule", b =>
                 {
                     b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
                     b.Property<string>("Description")
                         .IsRequired()

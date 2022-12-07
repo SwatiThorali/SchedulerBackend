@@ -17,17 +17,60 @@ namespace Scheduler.Controllers
     public class SchedulesController : ControllerBase
     {
         private readonly SchedulerContext _context;
+
+        private readonly SchedulerContext _users;
         
-        public SchedulesController(SchedulerContext context)
+        public SchedulesController(SchedulerContext context, SchedulerContext users)
         {
             _context = context;
+            _users = users;
         }
 
         // GET: api/Schedules
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Schedule>>> GetSchedule()
+
+        public async Task<ActionResult<List<Schedulesdto>>> GetSchedule()
         {
-            return await _context.Schedule.ToListAsync();
+
+
+            try
+            {
+                var schedules = (from sch in _context.Schedule
+                                 join us in _context.Users
+                                 on sch.EmployeeId equals us.Id
+                                 join rl in _context.Roles
+                                 on us.RoleId equals rl.Id
+
+
+                                 select new Schedulesdto
+                                 {
+                                     Id = sch.Id,
+                                     Description = sch.Description,
+                                     UserId = sch.EmployeeId,
+                                     EndTime = sch.EndTime,
+                                     HalfDay = sch.HalfDay,
+                                     IsAllDay = sch.IsAllDay,
+                                     Location = sch.Location,
+                                     StartTime = sch.StartTime,
+                                     Imageurl = us.ImageUrl,
+                                     Subject = sch.Subject,
+                                     Username = us.Name,
+                                     Rolename = rl.Name,
+                                     RoleId = rl.Id
+
+                                 });
+
+
+                return schedules.ToList();
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+
+
+
         }
 
         // GET: api/Schedules/5
@@ -48,26 +91,19 @@ namespace Scheduler.Controllers
 
         // PUT: api/Schedules/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutSchedule(int id, Schedule schedule)
+        //[HttpPut("{id}")]
+        [HttpPut]
+        [Route("edit")]
+        public async Task<IActionResult> PutSchedule(Schedule schedule)
         {
-          
-            _context.Entry(schedule).State = EntityState.Modified;
-
             try
             {
+                _context.Entry(schedule).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
             }
-            catch (DbUpdateConcurrencyException)
+            catch (Exception ex)
             {
-                //if (!ProductExists(id))
-                //{
-                //    return NotFound();
-                //}
-                //else
-                //{
-                //    throw;
-                //}
+
             }
 
             return NoContent();
@@ -83,10 +119,8 @@ namespace Scheduler.Controllers
 
 
             _context.Schedule.Add(new Schedule()
-            {
-                Id = schedule.Id,
-                //StartTime = schedule.StartTime,
-                //EndTime = schedule.EndTime,
+            {   
+                //Id = schedule.Id,
                 StartTime = schedule.StartTime.AddHours(5.5),
                 EndTime = schedule.EndTime.AddHours(5.5),
                 IsAllDay = schedule.IsAllDay,
@@ -94,7 +128,8 @@ namespace Scheduler.Controllers
                 Description = schedule.Description,
                 Location = schedule.Location,
                 HalfDay = schedule.HalfDay,
-                EmployeeId = schedule.EmployeeId,
+                EmployeeId = schedule.EmployeeId
+                              
 
 
             });
@@ -125,5 +160,39 @@ namespace Scheduler.Controllers
         {
             return _context.Schedule.Any(e => e.Id == id);
         }
+    
+
+
+    #region Users
+
+    [HttpGet]
+    [Route("GetUsers")]
+    public async Task<List<Usersdto>> GetAllUsers()
+    {
+            var x = from Users us in _context.Users
+                    join Roles rl in _context.Roles
+                    on us.RoleId equals rl.Id
+
+                    select new Usersdto
+                    {
+                        Id = us.Id,
+                        Username = us.Name,
+                        RoleId = us.RoleId,
+                        Imageurl = us.ImageUrl,
+                        Rolename = rl.Name
+
+
+                    };
+
+
+        return x.ToList();
+
+
+
     }
+
+    #endregion
 }
+
+}
+
